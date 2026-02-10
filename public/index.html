@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle Inventory Intelligence</title>
+<style>
+:root{--p:#1a1a2e;--s:#16213e;--a:#0f3460;--h:#e94560;--ok:#00b894;--warn:#fdcb6e;--bad:#e17055;--t:#dfe6e9;--tm:#b2bec3;--cb:#1e2a3a;--ib:#0d1b2a;--bd:#2d3e50}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--p);color:var(--t);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--a);border-radius:4px}
+.hd{background:var(--s);border-bottom:2px solid var(--h);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-i{width:44px;height:44px;background:linear-gradient(135deg,#e94560,#0f3460);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#fff}
+.logo h1{font-size:18px}.logo span{font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:2px}
+.hd-btns{display:flex;gap:8px}
+.hd-btn{padding:7px 16px;border:1px solid var(--bd);background:0;color:var(--t);border-radius:7px;cursor:pointer;font-size:13px;transition:.3s}
+.hd-btn:hover{border-color:var(--h);color:var(--h)}
+.mx{max-width:1400px;margin:0 auto;padding:24px 32px}
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:9px 20px;border:1px solid var(--bd);background:var(--cb);color:var(--tm);border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;transition:.3s}
+.tab:hover{border-color:var(--a)}.tab.on{background:var(--h);border-color:var(--h);color:#fff}
+.pane{display:none}.pane.on{display:block}
+.card{background:var(--cb);border:1px solid var(--bd);border-radius:14px;padding:24px;margin-bottom:20px}
+.card-hd{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--bd)}
+.card-ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.card-tt{font-size:15px;font-weight:600}.card-st{font-size:11px;color:var(--tm)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.fg{display:flex;flex-direction:column;gap:5px}.fg.fw{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{padding:10px 14px;background:var(--ib);border:1px solid var(--bd);border-radius:9px;color:var(--t);font-size:13px;font-family:inherit;outline:0;transition:.3s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--h)}
+.fg input::placeholder{color:#4a5568}.fg textarea{resize:vertical;min-height:70px}
+.fg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bar{display:flex;gap:12px;justify-content:center;margin:24px 0;flex-wrap:wrap}
+.btn{padding:14px 36px;border:0;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;font-family:inherit}
+.btn-p{background:linear-gradient(135deg,#e94560,#0f3460);color:#fff;box-shadow:0 4px 20px rgba(233,69,96,.3)}
+.btn-p:hover{transform:translateY(-2px)}.btn-s{background:0;color:var(--t);border:2px solid var(--bd)}
+.btn-g{background:rgba(0,184,148,.15);color:var(--ok);border:1px solid rgba(0,184,148,.3)}
+.btn-sm{padding:10px 20px;font-size:13px}
+.ld{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,26,46,.95);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px}
+.ld.on{display:flex}
+.sp{width:50px;height:50px;border:4px solid var(--bd);border-top-color:var(--h);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rpt{display:none;margin-top:20px}.rpt.on{display:block}
+.rpt-hd{background:var(--cb);border:1px solid var(--bd);border-radius:14px;padding:28px;margin-bottom:20px}
+.rpt-hd h2{font-size:26px;font-weight:700;margin-bottom:8px}
+.rpt-meta{display:flex;gap:20px;flex-wrap:wrap}
+.mi{display:flex;flex-direction:column}.mi-l{font-size:10px;text-transform:uppercase;color:var(--tm);letter-spacing:1px}.mi-v{font-size:15px;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:var(--cb);border:1px solid var(--bd);border-radius:10px;padding:20px;text-align:center}
+.kpi-l{font-size:10px;text-transform:uppercase;color:var(--tm);letter-spacing:1px;margin-bottom:6px}
+.kpi-v{font-size:26px;font-weight:700}.kpi-d{font-size:11px;color:var(--tm);margin-top:4px}
+.grn{color:var(--ok)}.ylw{color:var(--warn)}.red{color:var(--bad)}.blu{color:#74b9ff}
+.rc{background:var(--cb);border:1px solid var(--bd);border-radius:14px;margin-bottom:20px;overflow:hidden}
+.rc-h{padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px}
+.rc-n{width:32px;height:32px;background:linear-gradient(135deg,#e94560,#0f3460);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.rc-t{font-size:17px;font-weight:700}
+.rc-b{padding:24px}.rc-b p{font-size:13px;line-height:1.7;color:var(--tm);margin-bottom:10px}.rc-b strong{color:var(--t)}.rc-b h3{font-size:15px;margin:16px 0 8px}
+.badge{display:inline-block;padding:3px 10px;border-radius:16px;font-size:11px;font-weight:600}
+.b-grn{background:rgba(0,184,148,.15);color:var(--ok)}.b-ylw{background:rgba(253,203,110,.15);color:var(--warn)}.b-red{background:rgba(233,69,96,.15);color:var(--h)}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;margin:14px 0}
+.tbl thead th{background:var(--ib);padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--tm);font-weight:600;border-bottom:2px solid var(--bd)}
+.tbl tbody td{padding:10px 14px;border-bottom:1px solid var(--bd);font-size:13px}
+.co{padding:16px 20px;border-radius:10px;margin:14px 0;border-left:4px solid}
+.co-r{background:rgba(233,69,96,.08);border-color:var(--h)}.co-g{background:rgba(0,184,148,.08);border-color:var(--ok)}
+.co-b{background:rgba(116,185,255,.08);border-color:#74b9ff}.co-y{background:rgba(253,203,110,.08);border-color:var(--warn)}
+.co h4{margin-bottom:6px;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.co p,.co li{font-size:13px;line-height:1.7;color:var(--tm)}.co ul{margin:6px 0 0 18px}
+.rb{background:var(--ib);border:2px solid var(--h);border-radius:10px;padding:20px;margin:18px 0;text-align:center}
+.rb-a{font-size:22px;font-weight:700;color:var(--h)}.rb-d{font-size:15px;color:var(--t)}.rb-s{font-size:12px;color:var(--tm);margin-top:6px}
+.ai{background:var(--ib);border:1px solid var(--bd);border-radius:10px;padding:16px 20px;margin:10px 0;display:flex;gap:14px;align-items:flex-start}
+.ai-n{width:28px;height:28px;background:linear-gradient(135deg,#e94560,#0f3460);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;color:#fff}
+.ai-c h4{font-size:14px;font-weight:700;margin-bottom:4px}.ai-c p{font-size:12px;color:var(--tm);line-height:1.5}
+.ai-t{display:inline-block;padding:2px 8px;background:rgba(233,69,96,.15);color:var(--h);border-radius:5px;font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:6px}
+.pr{display:flex;align-items:center;gap:14px;margin:10px 0}.pr-l{width:90px;font-size:13px;font-weight:600;flex-shrink:0}
+.pr-bg{flex:1;height:26px;background:var(--ib);border-radius:7px;overflow:hidden}
+.pr-f{height:100%;border-radius:7px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#fff;transition:width 1s}
+.pr-grn{background:linear-gradient(90deg,#00b894,#00cec9)}.pr-ylw{background:linear-gradient(90deg,#fdcb6e,#f39c12)}.pr-red{background:linear-gradient(90deg,#e94560,#ff6b6b)}
+.eg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.ec{background:var(--ib);border:1px solid var(--bd);border-radius:10px;padding:18px;text-align:center}
+.ec.rec{border-color:var(--ok);box-shadow:0 0 16px rgba(0,184,148,.12)}
+.ec h4{font-size:13px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.ec .eg-v{font-size:22px;font-weight:700;margin-bottom:4px}.ec .eg-t{font-size:12px;color:var(--tm)}
+.rl{display:inline-block;background:var(--ok);color:#fff;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.chart-wrap{position:relative;width:100%;height:300px;background:var(--ib);border-radius:10px;padding:20px;margin:16px 0;overflow:hidden}
+.chart-svg{width:100%;height:100%}
+.chart-tooltip{position:absolute;background:var(--s);border:1px solid var(--h);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;display:none;z-index:10;white-space:nowrap}
+.chart-tooltip .ct-day{font-weight:700;font-size:14px;color:var(--h);margin-bottom:4px}
+.chart-tooltip .ct-row{display:flex;justify-content:space-between;gap:16px;color:var(--tm)}
+.chart-tooltip .ct-val{color:var(--t);font-weight:600}
+.comp-item{background:var(--ib);border:1px solid var(--bd);border-radius:10px;padding:16px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.comp-item .ci-main{flex:1;min-width:200px}.comp-item .ci-price{font-size:20px;font-weight:700;color:var(--ok)}
+.comp-item .ci-meta{font-size:12px;color:var(--tm)}.comp-item .ci-src{font-size:11px;color:var(--tm);font-style:italic}
+.comp-item .ci-del{background:rgba(233,69,96,.15);color:var(--h);border:0;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.ts{text-align:center;padding:16px;font-size:11px;color:var(--tm);border-top:1px solid var(--bd);margin-top:30px}
+@media(max-width:1024px){.g2{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.hd{padding:12px 16px;flex-direction:column;gap:10px}.mx{padding:16px 12px}.fg-grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}.eg{grid-template-columns:1fr}}
+@media print{.hd,.bar,.tabs,.hd-btns{display:none!important}body{background:#fff;color:#000}.rc,.kpi,.rpt-hd,.card{border-color:#ddd;background:#fff}.rc-b p,.co p,.co li,.ai-c p{color:#333}}
+</style>
+</head>
+<body>
+
+<div class="hd">
+<div class="logo">
+<div class="logo-i">VI</div>
+<div><h1>Vehicle Inventory Intelligence</h1><span>Dealership Analytics Platform</span></div>
+</div>
+<div class="hd-btns">
+<button class="hd-btn" onclick="showPane('add')">+ Add Vehicle</button>
+<button class="hd-btn" onclick="showPane('list')">Inventory</button>
+<button class="hd-btn" onclick="window.print()">Print</button>
+</div>
+</div>
+
+<div class="ld" id="ld"><div class="sp"></div><div style="font-size:16px;color:var(--tm)">Processing...</div></div>
+
+<div class="mx">
+  <!-- TAB NAVIGATION -->
+<div class="tabs" id="mainTabs">
+<div class="tab on" onclick="showPane('add')">Add Vehicle</div>
+<div class="tab" onclick="showPane('list')">Inventory</div>
+<div class="tab" onclick="showPane('report')">Report</div>
+</div>
+
+<!-- ==================== PANE: ADD VEHICLE ==================== -->
+<div class="pane on" id="pane-add">
+
+<!-- Sub-tabs for input methods -->
+<div class="tabs">
+<div class="tab on" onclick="showSubPane('ai')" id="st-ai">📷 AI Photo ID</div>
+<div class="tab" onclick="showSubPane('csv')" id="st-csv">📊 Spreadsheet</div>
+<div class="tab" onclick="showSubPane('manual')" id="st-manual">✏️ Manual Entry</div>
+</div>
+
+<!-- SUB: AI Photo Identification -->
+<div class="pane on" id="sub-ai">
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(116,185,255,.15)">📷</div>
+<div><div class="card-tt">Identify Vehicle from Photo</div><div class="card-st">Paste an image URL or upload a photo</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg fw">
+<label>Image URL</label>
+<input type="text" id="aiImageUrl" placeholder="https://example.com/car-photo.jpg">
+</div>
+<div class="fg">
+<label>Or Upload Image</label>
+<input type="file" id="aiImageFile" accept="image/*" style="padding:8px">
+</div>
+<div class="fg" style="justify-content:flex-end">
+<button class="btn btn-p btn-sm" onclick="identifyVehicle()">⚡ Analyze Image</button>
+</div>
+</div>
+<div id="aiResult" style="margin-top:16px"></div>
+</div>
+</div>
+
+<!-- SUB: Spreadsheet Import -->
+<div class="pane" id="sub-csv">
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(0,184,148,.15)">📊</div>
+<div><div class="card-tt">Import from Spreadsheet</div><div class="card-st">Upload CSV or XLSX file</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg">
+<label>Upload File (CSV / XLSX)</label>
+<input type="file" id="csvFile" accept=".csv,.xlsx,.xls" style="padding:8px">
+</div>
+<div class="fg" style="justify-content:flex-end;gap:8px;flex-direction:row;align-items:flex-end">
+<button class="btn btn-g btn-sm" onclick="previewImport()">Preview</button>
+<button class="btn btn-p btn-sm" onclick="runImport()">Import</button>
+<button class="btn btn-s btn-sm" onclick="downloadTemplate()">📥 Template</button>
+</div>
+</div>
+<div id="csvPreview" style="margin-top:16px;overflow-x:auto"></div>
+</div>
+</div>
+
+<!-- SUB: Manual Entry -->
+<div class="pane" id="sub-manual">
+<div class="bar" style="margin-top:0;justify-content:flex-start">
+<button class="btn btn-g btn-sm" onclick="loadSample()">▶ Load Sample</button>
+<button class="btn btn-s btn-sm" onclick="clearForm()">✕ Clear</button>
+</div>
+
+<div class="g2">
+<!-- Vehicle Details -->
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(233,69,96,.15)">🚗</div>
+<div><div class="card-tt">Vehicle Details</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg"><label>Year</label><input type="number" id="year" placeholder="2021"></div>
+<div class="fg"><label>Make</label><input type="text" id="make" placeholder="Toyota"></div>
+<div class="fg"><label>Model</label><input type="text" id="model" placeholder="Camry"></div>
+<div class="fg"><label>Trim</label><input type="text" id="trim" placeholder="SE"></div>
+<div class="fg"><label>Mileage</label><input type="number" id="mileage" placeholder="41850"></div>
+<div class="fg"><label>Ext Color</label><input type="text" id="extColor" placeholder="White"></div>
+<div class="fg"><label>Int Color</label><input type="text" id="intColor" placeholder="Black"></div>
+<div class="fg"><label>VIN</label><input type="text" id="vin" placeholder="Optional"></div>
+<div class="fg fw"><label>Equipment</label><textarea id="equipment" placeholder="Packages, features..."></textarea></div>
+</div>
+</div>
+
+<!-- Financial -->
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(0,184,148,.15)">💰</div>
+<div><div class="card-tt">Financial Data</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg"><label>Acquisition Cost</label><input type="number" id="acqCost" placeholder="19400"></div>
+<div class="fg"><label>Recon Cost</label><input type="number" id="reconCost" placeholder="850"></div>
+<div class="fg"><label>List Price</label><input type="number" id="listPrice" placeholder="23495"></div>
+<div class="fg"><label>Floorplan Rate %</label><input type="number" id="fpRate" placeholder="7.25" step="0.25"></div>
+<div class="fg"><label>Wholesale Price</label><input type="number" id="wsPrice" placeholder="20300"></div>
+<div class="fg"><label>Min Gross</label><input type="number" id="minGross" placeholder="2000"></div>
+</div>
+</div>
+
+<!-- Inventory Status -->
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(253,203,110,.15)">📊</div>
+<div><div class="card-tt">Inventory Status</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg"><label>Days in Inventory</label><input type="number" id="daysInv" placeholder="52"></div>
+<div class="fg"><label>Price Changes</label><input type="number" id="priceChanges" placeholder="1"></div>
+<div class="fg fw"><label>Days Since Last Change</label><input type="number" id="daysSinceChange" placeholder="18"></div>
+</div>
+</div>
+
+<!-- Market -->
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(15,52,96,.3)">🌐</div>
+<div><div class="card-tt">Market Context</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg"><label>Comp Low</label><input type="number" id="compLow" placeholder="22300"></div>
+<div class="fg"><label>Comp High</label><input type="number" id="compHigh" placeholder="23900"></div>
+<div class="fg"><label>Competing Units</label><input type="number" id="compUnits" placeholder="17"></div>
+<div class="fg"><label>Regional Demand</label>
+<select id="demand"><option value="">Select</option><option value="high">High</option><option value="moderate">Moderate</option><option value="soft">Soft</option></select></div>
+<div class="fg fw"><label>Seasonal Notes</label><textarea id="seasonal" placeholder="Timing factors..."></textarea></div>
+</div>
+</div>
+
+<!-- Signals (full width) -->
+<div class="card" style="grid-column:1/-1">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(162,155,254,.15)">📡</div>
+<div><div class="card-tt">Activity Signals</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+<div class="fg"><label>Views 7d</label><input type="number" id="v7" placeholder="28"></div>
+<div class="fg"><label>Views 30d</label><input type="number" id="v30" placeholder="134"></div>
+<div class="fg"><label>Leads 7d</label><input type="number" id="l7" placeholder="3"></div>
+<div class="fg"><label>Leads 30d</label><input type="number" id="l30" placeholder="11"></div>
+<div class="fg"><label>Test Drives 7d</label><input type="number" id="td7" placeholder="1"></div>
+<div class="fg"><label>Test Drives 30d</label><input type="number" id="td30" placeholder="4"></div>
+<div class="fg fw"><label>Sales Notes</label><textarea id="salesNotes" placeholder="Customer feedback..."></textarea></div>
+</div>
+</div>
+</div>
+
+<div class="bar">
+<button class="btn btn-p" onclick="generateReport()">⚡ Generate Intelligence Report</button>
+<button class="btn btn-s" onclick="clearForm()">Clear All</button>
+</div>
+</div>
+</div>
+
+<!-- ==================== PANE: INVENTORY LIST ==================== -->
+<div class="pane" id="pane-list">
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(116,185,255,.15)">📋</div>
+<div><div class="card-tt">Vehicle Inventory</div><div class="card-st">All vehicles in the system</div></div>
+</div>
+<div id="vehicleList"><p style="color:var(--tm)">No vehicles added yet. Use "Add Vehicle" to get started.</p></div>
+</div>
+</div>
+
+<!-- ==================== PANE: REPORT ==================== -->
+<div class="pane" id="pane-report">
+<div class="rpt" id="rptSection"></div>
+</div>
+
+</div><!-- end .mx -->
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle Inventory Intelligence</title>
+<style>
+:root{--p:#1a1a2e;--s:#16213e;--a:#0f3460;--h:#e94560;--ok:#00b894;--warn:#fdcb6e;--bad:#e17055;--t:#dfe6e9;--tm:#b2bec3;--cb:#1e2a3a;--ib:#0d1b2a;--bd:#2d3e50}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--p);color:var(--t);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--a);border-radius:4px}
+.hd{background:var(--s);border-bottom:2px solid var(--h);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-i{width:44px;height:44px;background:linear-gradient(135deg,#e94560,#0f3460);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#fff}
+.logo h1{font-size:18px}.logo span{font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:2px}
+.hd-btns{display:flex;gap:8px}
+.hd-btn{padding:7px 16px;border:1px solid var(--bd);background:0;color:var(--t);border-radius:7px;cursor:pointer;font-size:13px;transition:.3s}
+.hd-btn:hover{border-color:var(--h);color:var(--h)}
+.mx{max-width:1400px;margin:0 auto;padding:24px 32px}
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:9px 20px;border:1px solid var(--bd);background:var(--cb);color:var(--tm);border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;transition:.3s}
+.tab:hover{border-color:var(--a)}.tab.on{background:var(--h);border-color:var(--h);color:#fff}
+.pane{display:none}.pane.on{display:block}
+.card{background:var(--cb);border:1px solid var(--bd);border-radius:14px;padding:24px;margin-bottom:20px}
+.card-hd{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--bd)}
+.card-ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.card-tt{font-size:15px;font-weight:600}.card-st{font-size:11px;color:var(--tm)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.fg{display:flex;flex-direction:column;gap:5px}.fg.fw{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{padding:10px 14px;background:var(--ib);border:1px solid var(--bd);border-radius:9px;color:var(--t);font-size:13px;font-family:inherit;outline:0;transition:.3s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--h)}
+.fg input::placeholder{color:#4a5568}.fg textarea{resize:vertical;min-height:70px}
+.fg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bar{display:flex;gap:12px;justify-content:center;margin:24px 0;flex-wrap:wrap}
+.btn{padding:14px 36px;border:0;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;font-family:inherit}
+.btn-p{background:linear-gradient(135deg,#e94560,#0f3460);color:#fff;box-shadow:0 4px 20px rgba(233,69,96,.3)}
+.btn-p:hover{transform:translateY(-2px)}.btn-s{background:0;color:var(--t);border:2px solid var(--bd)}
+.btn-g{background:rgba(0,184,148,.15);color:var(--ok);border:1px solid rgba(0,184,148,.3)}
+.btn-sm{padding:10px 20px;font-size:13px}
+.ld{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,26,46,.95);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px}
+.ld.on{display:flex}
+.sp{width:50px;height:50px;border:4px solid var(--bd);border-top-color:var(--h);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rpt{display:none;margin-top:20px}.rpt.on{display:block}
+.rpt-hd{background:var(--cb);border:1px solid var(--bd);border-radius:14px;padding:28px;margin-bottom:20px}
+.rpt-hd h2{font-size:26px;font-weight:700;margin-bottom:8px}
+.rpt-meta{display:flex;gap:20px;flex-wrap:wrap}
+.mi{display:flex;flex-direction:column}.mi-l{font-size:10px;text-transform:uppercase;color:var(--tm);letter-spacing:1px}.mi-v{font-size:15px;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:var(--cb);border:1px solid var(--bd);border-radius:10px;padding:20px;text-align:center}
+.kpi-l{font-size:10px;text-transform:uppercase;color:var(--tm);letter-spacing:1px;margin-bottom:6px}
+.kpi-v{font-size:26px;font-weight:700}.kpi-d{font-size:11px;color:var(--tm);margin-top:4px}
+.grn{color:var(--ok)}.ylw{color:var(--warn)}.red{color:var(--bad)}.blu{color:#74b9ff}
+.rc{background:var(--cb);border:1px solid var(--bd);border-radius:14px;margin-bottom:20px;overflow:hidden}
+.rc-h{padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px}
+.rc-n{width:32px;height:32px;background:linear-gradient(135deg,#e94560,#0f3460);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.rc-t{font-size:17px;font-weight:700}
+.rc-b{padding:24px}.rc-b p{font-size:13px;line-height:1.7;color:var(--tm);margin-bottom:10px}.rc-b strong{color:var(--t)}.rc-b h3{font-size:15px;margin:16px 0 8px}
+.badge{display:inline-block;padding:3px 10px;border-radius:16px;font-size:11px;font-weight:600}
+.b-grn{background:rgba(0,184,148,.15);color:var(--ok)}.b-ylw{background:rgba(253,203,110,.15);color:var(--warn)}.b-red{background:rgba(233,69,96,.15);color:var(--h)}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;margin:14px 0}
+.tbl thead th{background:var(--ib);padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--tm);font-weight:600;border-bottom:2px solid var(--bd)}
+.tbl tbody td{padding:10px 14px;border-bottom:1px solid var(--bd);font-size:13px}
+.co{padding:16px 20px;border-radius:10px;margin:14px 0;border-left:4px solid}
+.co-r{background:rgba(233,69,96,.08);border-color:var(--h)}.co-g{background:rgba(0,184,148,.08);border-color:var(--ok)}
+.co-b{background:rgba(116,185,255,.08);border-color:#74b9ff}.co-y{background:rgba(253,203,110,.08);border-color:var(--warn)}
+.co h4{margin-bottom:6px;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.co p,.co li{font-size:13px;line-height:1.7;color:var(--tm)}.co ul{margin:6px 0 0 18px}
+.rb{background:var(--ib);border:2px solid var(--h);border-radius:10px;padding:20px;margin:18px 0;text-align:center}
+.rb-a{font-size:22px;font-weight:700;color:var(--h)}.rb-d{font-size:15px;color:var(--t)}.rb-s{font-size:12px;color:var(--tm);margin-top:6px}
+.ai{background:var(--ib);border:1px solid var(--bd);border-radius:10px;padding:16px 20px;margin:10px 0;display:flex;gap:14px;align-items:flex-start}
+.ai-n{width:28px;height:28px;background:linear-gradient(135deg,#e94560,#0f3460);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;color:#fff}
+.ai-c h4{font-size:14px;font-weight:700;margin-bottom:4px}.ai-c p{font-size:12px;color:var(--tm);line-height:1.5}
+.ai-t{display:inline-block;padding:2px 8px;background:rgba(233,69,96,.15);color:var(--h);border-radius:5px;font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:6px}
+.pr{display:flex;align-items:center;gap:14px;margin:10px 0}.pr-l{width:90px;font-size:13px;font-weight:600;flex-shrink:0}
+.pr-bg{flex:1;height:26px;background:var(--ib);border-radius:7px;overflow:hidden}
+.pr-f{height:100%;border-radius:7px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#fff;transition:width 1s}
+.pr-grn{background:linear-gradient(90deg,#00b894,#00cec9)}.pr-ylw{background:linear-gradient(90deg,#fdcb6e,#f39c12)}.pr-red{background:linear-gradient(90deg,#e94560,#ff6b6b)}
+.eg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.ec{background:var(--ib);border:1px solid var(--bd);border-radius:10px;padding:18px;text-align:center}
+.ec.rec{border-color:var(--ok);box-shadow:0 0 16px rgba(0,184,148,.12)}
+.ec h4{font-size:13px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.ec .eg-v{font-size:22px;font-weight:700;margin-bottom:4px}.ec .eg-t{font-size:12px;color:var(--tm)}
+.rl{display:inline-block;background:var(--ok);color:#fff;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.chart-wrap{position:relative;width:100%;height:300px;background:var(--ib);border-radius:10px;padding:20px;margin:16px 0;overflow:hidden}
+.chart-svg{width:100%;height:100%}
+.chart-tooltip{position:absolute;background:var(--s);border:1px solid var(--h);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;display:none;z-index:10;white-space:nowrap}
+.chart-tooltip .ct-day{font-weight:700;font-size:14px;color:var(--h);margin-bottom:4px}
+.chart-tooltip .ct-row{display:flex;justify-content:space-between;gap:16px;color:var(--tm)}
+.chart-tooltip .ct-val{color:var(--t);font-weight:600}
+.comp-item{background:var(--ib);border:1px solid var(--bd);border-radius:10px;padding:16px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.comp-item .ci-main{flex:1;min-width:200px}.comp-item .ci-price{font-size:20px;font-weight:700;color:var(--ok)}
+.comp-item .ci-meta{font-size:12px;color:var(--tm)}.comp-item .ci-src{font-size:11px;color:var(--tm);font-style:italic}
+.comp-item .ci-del{background:rgba(233,69,96,.15);color:var(--h);border:0;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.ts{text-align:center;padding:16px;font-size:11px;color:var(--tm);border-top:1px solid var(--bd);margin-top:30px}
+@media(max-width:1024px){.g2{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.hd{padding:12px 16px;flex-direction:column;gap:10px}.mx{padding:16px 12px}.fg-grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}.eg{grid-template-columns:1fr}}
+@media print{.hd,.bar,.tabs,.hd-btns{display:none!important}body{background:#fff;color:#000}.rc,.kpi,.rpt-hd,.card{border-color:#ddd;background:#fff}.rc-b p,.co p,.co li,.ai-c p{color:#333}}
+</style>
+</head>
+<body>
+
+<div class="hd">
+<div class="logo">
+<div class="logo-i">VI</div>
+<div><h1>Vehicle Inventory Intelligence</h1><span>Dealership Analytics Platform</span></div>
+</div>
+<div class="hd-btns">
+<button class="hd-btn" onclick="showPane('add')">+ Add Vehicle</button>
+<button class="hd-btn" onclick="showPane('list')">Inventory</button>
+<button class="hd-btn" onclick="window.print()">Print</button>
+</div>
+</div>
+
+<div class="ld" id="ld"><div class="sp"></div><div style="font-size:16px;color:var(--tm)">Processing...</div></div>
+
+<div class="mx">
+
+<div class="tabs" id="mainTabs">
+<div class="tab on" onclick="showPane('add')">Add Vehicle</div>
+<div class="tab" onclick="showPane('list')">Inventory</div>
+<div class="tab" onclick="showPane('report')">Report</div>
+</div>
+
+<!-- ==================== PANE: ADD VEHICLE ==================== -->
+<div class="pane on" id="pane-add">
+
+<div class="tabs">
+<div class="tab on" onclick="showSubPane('ai')" id="st-ai">📷 AI Photo ID</div>
+<div class="tab" onclick="showSubPane('csv')" id="st-csv">📊 Spreadsheet</div>
+<div class="tab" onclick="showSubPane('manual')" id="st-manual">✏️ Manual Entry</div>
+</div>
+
+<!-- SUB: AI Photo -->
+<div class="pane on" id="sub-ai">
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(116,185,255,.15)">📷</div>
+<div><div class="card-tt">Identify Vehicle from Photo</div><div class="card-st">Paste an image URL or upload a photo</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg fw"><label>Image URL</label><input type="text" id="aiImageUrl" placeholder="https://example.com/car-photo.jpg"></div>
+<div class="fg"><label>Or Upload Image</label><input type="file" id="aiImageFile" accept="image/*" style="padding:8px"></div>
+<div class="fg" style="justify-content:flex-end"><button class="btn btn-p btn-sm" onclick="identifyVehicle()">⚡ Analyze Image</button></div>
+</div>
+<div id="aiResult" style="margin-top:16px"></div>
+</div>
+</div>
+
+<!-- SUB: Spreadsheet -->
+<div class="pane" id="sub-csv">
+<div class="card">
+<div class="card-hd">
+<div class="card-ic" style="background:rgba(0,184,148,.15)">📊</div>
+<div><div class="card-tt">Import from Spreadsheet</div><div class="card-st">Upload CSV or XLSX file</div></div>
+</div>
+<div class="fg-grid">
+<div class="fg"><label>Upload File (CSV / XLSX)</label><input type="file" id="csvFile" accept=".csv,.xlsx,.xls" style="padding:8px"></div>
+<div class="fg" style="justify-content:flex-end;gap:8px;flex-direction:row;align-items:flex-end">
+<button class="btn btn-g btn-sm" onclick="previewImport()">Preview</button>
+<button class="btn btn-p btn-sm" onclick="runImport()">Import</button>
+<button class="btn btn-s btn-sm" onclick="downloadTemplate()">📥 Template</button>
+</div>
+</div>
+<div id="csvPreview" style="margin-top:16px;overflow-x:auto"></div>
+</div>
+</div>
+
+<!-- SUB: Manual Entry -->
+<div class="pane" id="sub-manual">
+<div class="bar" style="margin-top:0;justify-content:flex-start">
+<button class="btn btn-g btn-sm" onclick="loadSample()">▶ Load Sample</button>
+<button class="btn btn-s btn-sm" onclick="clearForm()">✕ Clear</button>
+</div>
+<div class="g2">
+<div class="card">
+<div class="card-hd"><div class="card-ic" style="background:rgba(233,69,96,.15)">🚗</div><div><div class="card-tt">Vehicle Details</div></div></div>
+<div class="fg-grid">
+<div class="fg"><label>Year</label><input type="number" id="year" placeholder="2021"></div>
+<div class="fg"><label>Make</label><input type="text" id="make" placeholder="Toyota"></div>
+<div class="fg"><label>Model</label><input type="text" id="model" placeholder="Camry"></div>
+<div class="fg"><label>Trim</label><input type="text" id="trim" placeholder="SE"></div>
+<div class="fg"><label>Mileage</label><input type="number" id="mileage" placeholder="41850"></div>
+<div class="fg"><label>Ext Color</label><input type="text" id="extColor" placeholder="White"></div>
+<div class="fg"><label>Int Color</label><input type="text" id="intColor" placeholder="Black"></div>
+<div class="fg"><label>VIN</label><input type="text" id="vin" placeholder="Optional"></div>
+<div class="fg fw"><label>Equipment</label><textarea id="equipment" placeholder="Packages, features..."></textarea></div>
+</div>
+</div>
+<div class="card">
+<div class="card-hd"><div class="card-ic" style="background:rgba(0,184,148,.15)">💰</div><div><div class="card-tt">Financial Data</div></div></div>
+<div class="fg-grid">
+<div class="fg"><label>Acquisition Cost</label><input type="number" id="acqCost" placeholder="19400"></div>
+<div class="fg"><label>Recon Cost</label><input type="number" id="reconCost" placeholder="850"></div>
+<div class="fg"><label>List Price</label><input type="number" id="listPrice" placeholder="23495"></div>
+<div class="fg"><label>Floorplan Rate %</label><input type="number" id="fpRate" placeholder="7.25" step="0.25"></div>
+<div class="fg"><label>Wholesale Price</label><input type="number" id="wsPrice" placeholder="20300"></div>
+<div class="fg"><label>Min Gross</label><input type="number" id="minGross" placeholder="2000"></div>
+</div>
+</div>
+<div class="card">
+<div class="card-hd"><div class="card-ic" style="background:rgba(253,203,110,.15)">📊</div><div><div class="card-tt">Inventory Status</div></div></div>
+<div class="fg-grid">
+<div class="fg"><label>Days in Inventory</label><input type="number" id="daysInv" placeholder="52"></div>
+<div class="fg"><label>Price Changes</label><input type="number" id="priceChanges" placeholder="1"></div>
+<div class="fg fw"><label>Days Since Last Change</label><input type="number" id="daysSinceChange" placeholder="18"></div>
+</div>
+</div>
+<div class="card">
+<div class="card-hd"><div class="card-ic" style="background:rgba(15,52,96,.3)">🌐</div><div><div class="card-tt">Market Context</div></div></div>
+<div class="fg-grid">
+<div class="fg"><label>Comp Low</label><input type="number" id="compLow" placeholder="22300"></div>
+<div class="fg"><label>Comp High</label><input type="number" id="compHigh" placeholder="23900"></div>
+<div class="fg"><label>Competing Units</label><input type="number" id="compUnits" placeholder="17"></div>
+<div class="fg"><label>Regional Demand</label><select id="demand"><option value="">Select</option><option value="high">High</option><option value="moderate">Moderate</option><option value="soft">Soft</option></select></div>
+<div class="fg fw"><label>Seasonal Notes</label><textarea id="seasonal" placeholder="Timing factors..."></textarea></div>
+</div>
+</div>
+<div class="card" style="grid-column:1/-1">
+<div class="card-hd"><div class="card-ic" style="background:rgba(162,155,254,.15)">📡</div><div><div class="card-tt">Activity Signals</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+<div class="fg"><label>Views 7d</label><input type="number" id="v7" placeholder="28"></div>
+<div class="fg"><label>Views 30d</label><input type="number" id="v30" placeholder="134"></div>
+<div class="fg"><label>Leads 7d</label><input type="number" id="l7" placeholder="3"></div>
+<div class="fg"><label>Leads 30d</label><input type="number" id="l30" placeholder="11"></div>
+<div class="fg"><label>Test Drives 7d</label><input type="number" id="td7" placeholder="1"></div>
+<div class="fg"><label>Test Drives 30d</label><input type="number" id="td30" placeholder="4"></div>
+<div class="fg fw"><label>Sales Notes</label><textarea id="salesNotes" placeholder="Customer feedback..."></textarea></div>
+</div>
+</div>
+</div>
+<div class="bar">
+<button class="btn btn-p" onclick="generateReport()">⚡ Generate Intelligence Report</button>
+<button class="btn btn-s" onclick="clearForm()">Clear All</button>
+</div>
+</div>
+</div>
+
+<!-- ==================== PANE: INVENTORY LIST ==================== -->
+<div class="pane" id="pane-list">
+<div class="card">
+<div class="card-hd"><div class="card-ic" style="background:rgba(116,185,255,.15)">📋</div><div><div class="card-tt">Vehicle Inventory</div><div class="card-st">All vehicles in the system</div></div></div>
+<div id="vehicleList"><p style="color:var(--tm)">No vehicles added yet.</p></div>
+</div>
+</div>
+
+<!-- ==================== PANE: REPORT ==================== -->
+<div class="pane" id="pane-report">
+<div class="rpt" id="rptSection"></div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPane(name){
+    document.querySelectorAll('.pane').forEach(p=>{
+        if(p.id&&p.id.startsWith('pane-'))p.classList.remove('on');
+    });
+    const el=document.getElementById('pane-'+name);
+    if(el)el.classList.add('on');
+    document.querySelectorAll('#mainTabs .tab').forEach((t,i)=>{
+        t.classList.remove('on');
+        if((name==='add'&&i===0)||(name==='list'&&i===1)||(name==='report'&&i===2))t.classList.add('on');
+    });
+    if(name==='list')refreshInventory();
+    if(name==='report'){
+        const rs=document.getElementById('rptSection');
+        if(!rs.innerHTML.trim())rs.innerHTML='<p style="color:var(--tm);text-align:center;padding:40px">No report generated yet. Add a vehicle and generate a report.</p>';
+        rs.classList.add('on');
+    }
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showSubPane(name){
+    ['ai','csv','manual'].forEach(n=>{
+        const el=document.getElementById('sub-'+n);
+        const tab=document.getElementById('st-'+n);
+        if(el)el.classList.toggle('on',n===name);
+        if(tab)tab.classList.toggle('on',n===name);
+    });
+}
+
+// ============================================================
+// LOADING
+// ============================================================
+function showLoad(){document.getElementById('ld').classList.add('on')}
+function hideLoad(){document.getElementById('ld').classList.remove('on')}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function gv(id){return(document.getElementById(id)||{}).value||''}
+function gn(id){return parseFloat(gv(id))||0}
+function fm(n){return n<0?'-$'+Math.abs(Math.round(n)).toLocaleString():'$'+Math.round(n).toLocaleString()}
+
+function collectFormData(){
+    return {
+        year:gn('year'),make:gv('make'),model:gv('model'),trim:gv('trim'),mileage:gn('mileage'),
+        ext_color:gv('extColor'),int_color:gv('intColor'),vin:gv('vin'),equipment:gv('equipment'),
+        acquisition_cost:gn('acqCost'),recon_cost:gn('reconCost'),list_price:gn('listPrice'),
+        floorplan_rate:gn('fpRate')||7.25,wholesale_price:gn('wsPrice'),min_gross:gn('minGross')||2000,
+        days_in_inventory:gn('daysInv'),price_changes:gn('priceChanges'),days_since_price_change:gn('daysSinceChange'),
+        comp_low:gn('compLow'),comp_high:gn('compHigh'),competing_units:gn('compUnits'),
+        demand_signal:gv('demand')||'moderate',seasonal_notes:gv('seasonal'),
+        views_7:gn('v7'),views_30:gn('v30'),leads_7:gn('l7'),leads_30:gn('l30'),
+        test_drives_7:gn('td7'),test_drives_30:gn('td30'),sales_notes:gv('salesNotes')
+    };
+}
+
+// ============================================================
+// FEATURE 1: AI VISION IDENTIFICATION
+// ============================================================
+async function identifyVehicle(){
+    const url=gv('aiImageUrl');
+    const fileInput=document.getElementById('aiImageFile');
+    const file=fileInput&&fileInput.files[0];
+
+    if(!url&&!file){alert('Provide an image URL or upload a file.');return}
+
+    showLoad();
+    const resultDiv=document.getElementById('aiResult');
+
+    try{
+        let resp;
+        if(file){
+            const fd=new FormData();
+            fd.append('image',file);
+            resp=await fetch('/api/vehicle/identify',{method:'POST',body:fd});
+        }else{
+            resp=await fetch('/api/vehicle/identify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:url})});
+        }
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error||'Failed');
+
+        const id=data.identification;
+        const conf=id.confidence||0;
+        const confPct=Math.round(conf*100);
+        const confColor=confPct>=75?'grn':confPct>=50?'ylw':'red';
+        const confLabel=confPct>=75?'HIGH':confPct>=50?'MEDIUM':'LOW';
+
+        let html=`<div class="co co-${confPct>=75?'g':confPct>=50?'y':'r'}">
+            <h4>Identification Result — Confidence: <span class="badge b-${confColor}">${confLabel} (${confPct}%)</span></h4>
+            <p><strong>Year:</strong> ${id.year||'Unknown'} | <strong>Make:</strong> ${id.make||'Unknown'} | <strong>Model:</strong> ${id.model||'Unknown'} | <strong>Trim:</strong> ${id.trim||'—'}</p>
+            <p><em>${id.notes||''}</em></p>`;
+
+        if(data.below_threshold){
+            html+=`<p style="margin-top:10px;color:var(--warn)">⚠️ Below confidence threshold (${Math.round(data.confidence_threshold*100)}%). Use spreadsheet or manual entry for accuracy.</p>`;
+        }
+
+        html+=`<div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-g btn-sm" onclick="applyAiResult(${id.year||0},'${(id.make||'').replace(/'/g,"\\'")}','${(id.model||'').replace(/'/g,"\\'")}','${(id.trim||'').replace(/'/g,"\\'")}')">✓ Use This & Go to Manual Entry</button>
+        </div></div>`;
+
+        resultDiv.innerHTML=html;
+    }catch(err){
+        resultDiv.innerHTML=`<div class="co co-r"><h4>Error</h4><p>${err.message}</p></div>`;
+    }finally{hideLoad()}
+}
+
+function applyAiResult(year,make,model,trim){
+    if(year)document.getElementById('year').value=year;
+    if(make)document.getElementById('make').value=make;
+    if(model)document.getElementById('model').value=model;
+    if(trim)document.getElementById('trim').value=trim;
+    showSubPane('manual');
+}
+
+// ============================================================
+// FEATURE 1B: SPREADSHEET IMPORT
+// ============================================================
+function downloadTemplate(){
+    window.location.href='/api/vehicle/template';
+}
+
+async function previewImport(){
+    const fileInput=document.getElementById('csvFile');
+    if(!fileInput.files[0]){alert('Select a file first.');return}
+    showLoad();
+    try{
+        const fd=new FormData();
+        fd.append('file',fileInput.files[0]);
+        fd.append('preview_only','true');
+        const resp=await fetch('/api/vehicle/import',{method:'POST',body:fd});
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error||'Failed');
+
+        let html=`<p style="color:var(--ok);margin-bottom:10px">Found ${data.row_count} rows</p>`;
+        if(data.rows.length>0){
+            const keys=Object.keys(data.rows[0]);
+            html+=`<table class="tbl"><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>`;
+            data.rows.slice(0,20).forEach(row=>{
+                html+=`<tr>${keys.map(k=>`<td>${row[k]||''}</td>`).join('')}</tr>`;
+            });
+            html+=`</tbody></table>`;
+            if(data.row_count>20)html+=`<p style="color:var(--tm)">Showing first 20 of ${data.row_count} rows.</p>`;
+        }
+        if(data.errors.length>0){
+            html+=`<div class="co co-y"><h4>Parse Warnings</h4><ul>${data.errors.map(e=>`<li>Row ${e.row}: ${e.error}</li>`).join('')}</ul></div>`;
+        }
+        document.getElementById('csvPreview').innerHTML=html;
+    }catch(err){
+        document.getElementById('csvPreview').innerHTML=`<div class="co co-r"><p>${err.message}</p></div>`;
+    }finally{hideLoad()}
+}
+
+async function runImport(){
+    const fileInput=document.getElementById('csvFile');
+    if(!fileInput.files[0]){alert('Select a file first.');return}
+    if(!confirm('Import all rows from this file?'))return;
+    showLoad();
+    try{
+        const fd=new FormData();
+        fd.append('file',fileInput.files[0]);
+        const resp=await fetch('/api/vehicle/import',{method:'POST',body:fd});
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error||'Failed');
+
+        let html=`<div class="co co-g"><h4>Import Complete</h4><p>${data.imported.length} vehicles imported successfully.</p>`;
+        if(data.import_errors.length>0){
+            html+=`<p>${data.import_errors.length} rows had errors.</p>`;
+        }
+        html+=`<button class="btn btn-g btn-sm" style="margin-top:10px" onclick="showPane('list')">View Inventory →</button></div>`;
+        document.getElementById('csvPreview').innerHTML=html;
+    }catch(err){
+        document.getElementById('csvPreview').innerHTML=`<div class="co co-r"><p>${err.message}</p></div>`;
+    }finally{hideLoad()}
+}
+
+// ============================================================
+// SAMPLE DATA
+// ============================================================
+function loadSample(){
+    const vals={year:'2021',make:'Toyota',model:'Camry',trim:'SE',mileage:'41850',extColor:'White',intColor:'Black',
+        equipment:'SE Convenience Package, Blind Spot Monitor, Power Driver Seat, Apple CarPlay',
+        acqCost:'19400',reconCost:'850',listPrice:'23495',fpRate:'7.25',wsPrice:'20300',minGross:'2000',
+        daysInv:'52',priceChanges:'1',daysSinceChange:'18',compLow:'22300',compHigh:'23900',compUnits:'17',
+        demand:'moderate',seasonal:'Neutral; steady year-round demand, mild compression from newer model incentives',
+        v7:'28',v30:'134',l7:'3',l30:'11',td7:'1',td30:'4',
+        salesNotes:'Price resistance versus newer 2023 models; customers asking for $500-$1,000 flexibility'};
+    Object.entries(vals).forEach(([k,v])=>{const el=document.getElementById(k);if(el){el.tagName==='SELECT'?el.value=v:el.value=v}});
+    showSubPane('manual');
+}
+
+function clearForm(){
+    document.querySelectorAll('#pane-add input,#pane-add textarea,#pane-add select').forEach(el=>{
+        el.tagName==='SELECT'?el.selectedIndex=0:el.value='';
+    });
+}
+
+// ============================================================
+// INVENTORY LIST
+// ============================================================
+async function refreshInventory(){
+    try{
+        const resp=await fetch('/api/vehicles');
+        const data=await resp.json();
+        const el=document.getElementById('vehicleList');
+        if(!data.vehicles||data.vehicles.length===0){
+            el.innerHTML='<p style="color:var(--tm)">No vehicles. Add one to get started.</p>';
+            return;
+        }
+        let html='<table class="tbl"><thead><tr><th>Vehicle</th><th>List Price</th><th>Days</th><th>Zone</th><th>Actions</th></tr></thead><tbody>';
+        data.vehicles.forEach(v=>{
+            const zone=v.days_in_inventory<=30?'HEALTHY':v.days_in_inventory<=60?'AT-RISK':'DANGER';
+            const zb=zone==='HEALTHY'?'b-grn':zone==='AT-RISK'?'b-ylw':'b-red';
+            html+=`<tr>
+                <td><strong>${v.year} ${v.make} ${v.model} ${v.trim||''}</strong><br><span style="font-size:11px;color:var(--tm)">${(v.mileage||0).toLocaleString()} mi | ${v.ext_color||''}</span></td>
+                <td>${fm(v.list_price)}</td>
+                <td>${v.days_in_inventory}</td>
+                <td><span class="badge ${zb}">${zone}</span></td>
+                <td>
+                    <button class="btn btn-p btn-sm" style="padding:6px 12px;font-size:11px" onclick="analyzeVehicle('${v.id}')">Analyze</button>
+                    <button class="btn btn-g btn-sm" style="padding:6px 12px;font-size:11px" onclick="findComps('${v.id}')">Comps</button>
+                    <button class="btn btn-s btn-sm" style="padding:6px 12px;font-size:11px" onclick="viewOdds('${v.id}')">Odds</button>
+                    <button class="ci-del" onclick="deleteVehicle('${v.id}')">✕</button>
+                </td>
+            </tr>`;
+        });
+        html+='</tbody></table>';
+        el.innerHTML=html;
+    }catch(err){
+        document.getElementById('vehicleList').innerHTML=`<p style="color:var(--bad)">${err.message}</p>`;
+    }
+}
+
+async function deleteVehicle(id){
+    if(!confirm('Delete this vehicle?'))return;
+    await fetch('/api/vehicles/'+id,{method:'DELETE'});
+    refreshInventory();
+}
+
+async function analyzeVehicle(id){
+    showLoad();
+    try{
+        const resp=await fetch('/api/vehicles/'+id+'/analyze',{method:'POST'});
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error);
+        renderFullReport(data.report.analysis,data.report.vehicle_title);
+        showPane('report');
+    }catch(err){alert(err.message)}finally{hideLoad()}
+}
+
+// ============================================================
+// FEATURE 2: COMPS
+// ============================================================
+async function findComps(vehicleId){
+    showLoad();
+    try{
+        const resp=await fetch('/api/vehicle/'+vehicleId+'/comps/find',{method:'POST'});
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error);
+        renderComps(vehicleId,data.comps);
+        showPane('report');
+    }catch(err){alert(err.message)}finally{hideLoad()}
+}
+
+function renderComps(vehicleId,comps){
+    const rs=document.getElementById('rptSection');
+    let html=`<div style="display:flex;gap:10px;margin-bottom:16px">
+        <button class="btn btn-s btn-sm" onclick="showPane('list')">← Back</button>
+        <button class="btn btn-g btn-sm" onclick="findComps('${vehicleId}')">🔄 Refresh Comps</button>
+    </div>
+    <div class="rc"><div class="rc-h"><div class="rc-n">C</div><div class="rc-t">Market Comps (${comps.length})</div></div>
+    <div class="rc-b">`;
+    if(comps.length===0){
+        html+='<p>No comps found. Add manually below.</p>';
+    }else{
+        comps.forEach(c=>{
+            html+=`<div class="comp-item">
+                <div class="ci-main">
+                    <div class="ci-price">${fm(c.sold_price)}</div>
+                    <div class="ci-meta">${c.year} ${c.make} ${c.model} ${c.trim||''} | ${(c.mileage||0).toLocaleString()} mi | ${c.days_on_market||'?'}d DOM</div>
+                    <div class="ci-meta">${c.location||''} ${c.sold_date?'| Sold '+c.sold_date:''}</div>
+                    <div class="ci-src">${c.source} ${c.is_manual?'(Manual)':''}</div>
+                </div>
+                <button class="ci-del" onclick="deleteComp('${vehicleId}','${c.id}')">✕</button>
+            </div>`;
+        });
+
+        const prices=comps.filter(c=>c.sold_price>0).map(c=>c.sold_price).sort((a,b)=>a-b);
+        if(prices.length>0){
+            const median=prices[Math.floor(prices.length/2)];
+            const avg=prices.reduce((a,b)=>a+b,0)/prices.length;
+            const doms=comps.filter(c=>c.days_on_market>0).map(c=>c.days_on_market);
+            const avgDom=doms.length?Math.round(doms.reduce((a,b)=>a+b,0)/doms.length):0;
+            html+=`<div class="co co-b"><h4>Comp Summary</h4>
+                <p><strong>Median:</strong> ${fm(median)} | <strong>Average:</strong> ${fm(avg)} | <strong>Range:</strong> ${fm(prices[0])} – ${fm(prices[prices.length-1])} | <strong>Avg DOM:</strong> ${avgDom}d</p></div>`;
+        }
+    }
+
+    html+=`<h3 style="margin-top:20px">Add Manual Comp</h3>
+    <div class="fg-grid">
+        <div class="fg"><label>Sold Price</label><input type="number" id="mc-price" placeholder="22500"></div>
+        <div class="fg"><label>Mileage</label><input type="number" id="mc-miles" placeholder="40000"></div>
+        <div class="fg"><label>DOM</label><input type="number" id="mc-dom" placeholder="28"></div>
+        <div class="fg"><label>Source</label><input type="text" id="mc-src" placeholder="Auction"></div>
+        <div class="fg"><label>Location</label><input type="text" id="mc-loc" placeholder="Dallas, TX"></div>
+        <div class="fg"><label>Notes</label><input type="text" id="mc-notes" placeholder=""></div>
+    </div>
+    <div class="bar" style="justify-content:flex-start"><button class="btn btn-p btn-sm" onclick="addManualComp('${vehicleId}')">+ Add Comp</button></div>`;
+
+    html+=`</div></div>`;
+    rs.innerHTML=html;
+    rs.classList.add('on');
+}
+
+async function addManualComp(vehicleId){
+    const body={
+        sold_price:parseFloat(document.getElementById('mc-price').value)||0,
+        mileage:parseInt(document.getElementById('mc-miles').value)||0,
+        days_on_market:parseInt(document.getElementById('mc-dom').value)||0,
+        source:document.getElementById('mc-src').value||'Manual',
+        location:document.getElementById('mc-loc').value||'',
+        notes:document.getElementById('mc-notes').value||'',
+    };
+    if(!body.sold_price){alert('Enter a sold price.');return}
+    try{
+        const resp=await fetch('/api/vehicle/'+vehicleId+'/comps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!resp.ok)throw new Error('Failed');
+        findComps(vehicleId);
+    }catch(err){alert(err.message)}
+}
+
+async function deleteComp(vehicleId,compId){
+    await fetch('/api/vehicle/'+vehicleId+'/comps/'+compId,{method:'DELETE'});
+    findComps(vehicleId);
+}
+
+// ============================================================
+// FEATURE 3: ODDS / DAILY PROBABILITY CHART
+// ============================================================
+async function viewOdds(vehicleId){
+    showLoad();
+    try{
+        const resp=await fetch('/api/vehicle/'+vehicleId+'/odds?maxDays=90');
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error);
+        renderOdds(data);
+        showPane('report');
+    }catch(err){alert(err.message)}finally{hideLoad()}
+}
+
+function renderOdds(data){
+    const rs=document.getElementById('rptSection');
+    const s=data.summary;
+    const curve=data.curve;
+
+    let html=`<div style="display:flex;gap:10px;margin-bottom:16px">
+        <button class="btn btn-s btn-sm" onclick="showPane('list')">← Back</button>
+    </div>
+    <div class="rpt-hd"><h2>${data.vehicle_title} — Sell Probability</h2></div>
+
+    <div class="kpis">
+        <div class="kpi"><div class="kpi-l">30-Day Odds</div><div class="kpi-v ${s.p_30_day>50?'grn':s.p_30_day>30?'ylw':'red'}">${s.p_30_day}%</div></div>
+        <div class="kpi"><div class="kpi-l">60-Day Odds</div><div class="kpi-v ${s.p_60_day>65?'grn':s.p_60_day>45?'ylw':'red'}">${s.p_60_day}%</div></div>
+        <div class="kpi"><div class="kpi-l">90-Day Odds</div><div class="kpi-v ${s.p_90_day>75?'grn':s.p_90_day>55?'ylw':'red'}">${s.p_90_day}%</div></div>
+        <div class="kpi"><div class="kpi-l">Peak Day</div><div class="kpi-v blu">Day ${s.peak_day}</div><div class="kpi-d">${s.peak_daily_pct}% daily prob</div></div>
+    </div>`;
+
+    // Build SVG chart
+    const chartId='odds-chart-'+Date.now();
+    html+=`<div class="rc"><div class="rc-h"><div class="rc-n">📈</div><div class="rc-t">Daily Probability Curve (Hover for Details)</div></div>
+    <div class="rc-b">
+        <div class="chart-wrap" id="${chartId}-wrap">
+            <div class="chart-tooltip" id="${chartId}-tip"></div>
+            <svg class="chart-svg" id="${chartId}" viewBox="0 0 900 260" preserveAspectRatio="none"></svg>
+        </div>
+    </div></div>`;
+
+    // Model inputs
+    const mi=data.model_inputs;
+    html+=`<div class="rc"><div class="rc-h"><div class="rc-n">⚙️</div><div class="rc-t">Model Factors</div></div>
+    <div class="rc-b">
+        <table class="tbl"><thead><tr><th>Factor</th><th>Value</th><th>Multiplier</th></tr></thead><tbody>
+        <tr><td>Price vs Comps</td><td>${mi.price_vs_comps}x</td><td>${mi.price_multiplier}</td></tr>
+        <tr><td>Mileage vs Comps</td><td>${mi.mileage_vs_comps}x</td><td>${mi.mileage_multiplier}</td></tr>
+        <tr><td>Demand</td><td>${mi.demand_multiplier>1?'High':mi.demand_multiplier<1?'Soft':'Moderate'}</td><td>${mi.demand_multiplier}</td></tr>
+        <tr><td>Competition</td><td>—</td><td>${mi.competition_multiplier}</td></tr>
+        <tr><td>Engagement</td><td>—</td><td>${mi.engagement_multiplier}</td></tr>
+        <tr><td>Aging</td><td>—</td><td>${mi.aging_multiplier}</td></tr>
+        <tr><td><strong>Composite</strong></td><td></td><td><strong>${mi.composite_factor}</strong></td></tr>
+        </tbody></table>
+    </div></div>`;
+
+    rs.innerHTML=html;
+    rs.classList.add('on');
+
+    // Draw chart after DOM renders
+    setTimeout(()=>drawOddsChart(chartId,curve),50);
+}
+
+function drawOddsChart(chartId,curve){
+    const svg=document.getElementById(chartId);
+    const wrap=document.getElementById(chartId+'-wrap');
+    const tip=document.getElementById(chartId+'-tip');
+    if(!svg||!curve||curve.length===0)return;
+
+    const W=900,H=260,PAD_L=45,PAD_R=10,PAD_T=10,PAD_B=30;
+    const plotW=W-PAD_L-PAD_R,plotH=H-PAD_T-PAD_B;
+    const maxCum=Math.max(...curve.map(p=>p.cumulative_pct),10);
+    const maxDaily=Math.max(...curve.map(p=>p.daily_pct),1);
+
+    function xPos(day){return PAD_L+((day-1)/(curve.length-1))*plotW}
+    function yCum(val){return PAD_T+plotH-(val/maxCum)*plotH}
+    function yDaily(val){return PAD_T+plotH-(val/maxDaily)*plotH}
+
+    // Grid lines
+    let svgContent='';
+    for(let pct=0;pct<=maxCum;pct+=Math.ceil(maxCum/5)){
+        const y=yCum(pct);
+        svgContent+=`<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#2d3e50" stroke-width="0.5"/>`;
+        svgContent+=`<text x="${PAD_L-5}" y="${y+4}" fill="#b2bec3" font-size="9" text-anchor="end">${pct}%</text>`;
+    }
+
+    // X axis labels
+    [1,15,30,45,60,75,90].forEach(d=>{
+        if(d<=curve.length){
+            svgContent+=`<text x="${xPos(d)}" y="${H-5}" fill="#b2bec3" font-size="9" text-anchor="middle">D${d}</text>`;
+        }
+    });
+
+    // Daily bars
+    curve.forEach(p=>{
+        if(p.daily_pct>0){
+            const x=xPos(p.day);
+            const barH=(p.daily_pct/maxDaily)*plotH;
+            svgContent+=`<rect x="${x-3}" y="${PAD_T+plotH-barH}" width="6" height="${barH}" fill="rgba(233,69,96,0.25)" rx="2"/>`;
+        }
+    });
+
+    // Cumulative line
+    let cumPath='M';
+    curve.forEach((p,i)=>{
+        const x=xPos(p.day),y=yCum(p.cumulative_pct);
+        cumPath+=(i===0?'':' L')+`${x},${y}`;
+    });
+    svgContent+=`<path d="${cumPath}" fill="none" stroke="#00b894" stroke-width="2.5"/>`;
+
+    // 30/60 markers
+    [30,60].forEach(d=>{
+        if(d<=curve.length){
+            const x=xPos(d);
+            svgContent+=`<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+plotH}" stroke="#fdcb6e" stroke-width="0.8" stroke-dasharray="4,4"/>`;
+        }
+    });
+
+    // Invisible hover rects
+    curve.forEach(p=>{
+        const x=xPos(p.day);
+        svgContent+=`<rect x="${x-5}" y="${PAD_T}" width="10" height="${plotH}" fill="transparent" data-day="${p.day}" data-daily="${p.daily_pct}" data-cum="${p.cumulative_pct}" data-gross="${p.gross_if_sold}" data-fp="${p.floorplan_cost}" class="hover-rect" style="cursor:crosshair"/>`;
+    });
+
+    svg.innerHTML=svgContent;
+
+    // Hover events
+    svg.querySelectorAll('.hover-rect').forEach(rect=>{
+        rect.addEventListener('mousemove',e=>{
+            const day=rect.getAttribute('data-day');
+            const daily=rect.getAttribute('data-daily');
+            const cum=rect.getAttribute('data-cum');
+            const gross=rect.getAttribute('data-gross');
+            const fp=rect.getAttribute('data-fp');
+
+            tip.innerHTML=`<div class="ct-day">Day ${day}</div>
+                <div class="ct-row"><span>Daily Prob:</span><span class="ct-val">${daily}%</span></div>
+                <div class="ct-row"><span>Cumulative:</span><span class="ct-val">${cum}%</span></div>
+                <div class="ct-row"><span>Gross if Sold:</span><span class="ct-val">${fm(parseInt(gross))}</span></div>
+                <div class="ct-row"><span>Floorplan:</span><span class="ct-val">${fm(parseInt(fp))}</span></div>`;
+
+            const wrapRect=wrap.getBoundingClientRect();
+            let left=e.clientX-wrapRect.left+15;
+            let top=e.clientY-wrapRect.top-20;
+            if(left+180>wrapRect.width)left=left-200;
+            if(top<0)top=10;
+            tip.style.left=left+'px';
+            tip.style.top=top+'px';
+            tip.style.display='block';
+        });
+        rect.addEventListener('mouseleave',()=>{tip.style.display='none'});
+    });
+}
+
+// ============================================================
+// GENERATE REPORT (Manual Entry)
+// ============================================================
+async function generateReport(){
+    const data=collectFormData();
+    if(!data.year||!data.make||!data.model||!data.acquisition_cost||!data.list_price){
+        alert('Fill in Year, Make, Model, Acquisition Cost, and List Price.');return;
+    }
+    showLoad();
+    try{
+        // Save vehicle first
+        const saveResp=await fetch('/api/vehicles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const saveData=await saveResp.json();
+        if(!saveResp.ok)throw new Error(saveData.error);
+        const vid=saveData.vehicle.id;
+
+        // Analyze
+        const analyzeResp=await fetch('/api/vehicles/'+vid+'/analyze',{method:'POST'});
+        const analyzeData=await analyzeResp.json();
+        if(!analyzeResp.ok)throw new Error(analyzeData.error);
+
+        renderFullReport(analyzeData.report.analysis,analyzeData.report.vehicle_title);
+        showPane('report');
+    }catch(err){alert(err.message)}finally{hideLoad()}
+}
+
+// ============================================================
+// RENDER FULL ANALYSIS REPORT
+// ============================================================
+function renderFullReport(a,title){
+    const rs=document.getElementById('rptSection');
+    const f=a.financials;const p=a.pricing;const sp=a.sale_probability;const ag=a.aging;const ep=a.exit_path;const rc=a.risk_and_confidence;
+    const zBadge=ag.zone==='HEALTHY'?'b-grn':ag.zone==='AT-RISK'?'b-ylw':'b-red';
+    const gColor=f.current_net_gross>2000?'grn':f.current_net_gross>0?'ylw':'red';
+    const curveData=sp.daily_curve||[];
+    const chartId='rpt-chart-'+Date.now();
+
+    let html=`
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+        <button class="btn btn-s btn-sm" onclick="showPane('add')">← Back</button>
+        <button class="btn btn-s btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="rpt-hd"><h2>${title}</h2>
+        <div class="rpt-meta">
+            <div class="mi"><span class="mi-l">Invested</span><span class="mi-v">${fm(f.total_invested)}</span></div>
+            <div class="mi"><span class="mi-l">List</span><span class="mi-v">${fm(a.summary.current_list)}</span></div>
+            <div class="mi"><span class="mi-l">Days</span><span class="mi-v">${ag.days_in_inventory}</span></div>
+            <div class="mi"><span class="mi-l">Zone</span><span class="badge ${zBadge}">${ag.zone}</span></div>
+        </div>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi"><div class="kpi-l">Total Invested</div><div class="kpi-v blu">${fm(f.total_invested)}</div></div>
+        <div class="kpi"><div class="kpi-l">Net Gross</div><div class="kpi-v ${gColor}">${fm(f.current_net_gross)}</div><div class="kpi-d">After ${fm(f.floorplan_accrued_to_date)} FP</div></div>
+        <div class="kpi"><div class="kpi-l">Daily FP</div><div class="kpi-v red">$${f.daily_floorplan_cost.toFixed(2)}</div></div>
+        <div class="kpi"><div class="kpi-l">WS Exit</div><div class="kpi-v ${f.wholesale_net_today>=0?'ylw':'red'}">${fm(f.wholesale_net_today)}</div></div>
+    </div>
+
+    <!-- Probability -->
+    <div class="rc"><div class="rc-h"><div class="rc-n">1</div><div class="rc-t">Sale Probability</div></div><div class="rc-b">
+        <div class="pr"><div class="pr-l">30 Day</div><div class="pr-bg"><div class="pr-f ${sp.prob_30_day>50?'pr-grn':sp.prob_30_day>30?'pr-ylw':'pr-red'}" style="width:${sp.prob_30_day}%">${sp.prob_30_day}%</div></div></div>
+        <div class="pr"><div class="pr-l">60 Day</div><div class="pr-bg"><div class="pr-f ${sp.prob_60_day>60?'pr-grn':sp.prob_60_day>40?'pr-ylw':'pr-red'}" style="width:${sp.prob_60_day}%">${sp.prob_60_day}%</div></div></div>
+        <div class="pr"><div class="pr-l">90 Day</div><div class="pr-bg"><div class="pr-f ${sp.prob_90_day>70?'pr-grn':sp.prob_90_day>50?'pr-ylw':'pr-red'}" style="width:${sp.prob_90_day}%">${sp.prob_90_day}%</div></div></div>
+    `;
+
+    if(curveData.length>0){
+        html+=`<h3>Daily Probability Curve (Hover for Day-by-Day Detail)</h3>
+        <div class="chart-wrap" id="${chartId}-wrap">
+            <div class="chart-tooltip" id="${chartId}-tip"></div>
+            <svg class="chart-svg" id="${chartId}" viewBox="0 0 900 260" preserveAspectRatio="none"></svg>
+        </div>`;
+    }
+    html+=`</div></div>
+
+    <!-- Aging -->
+    <div class="rc"><div class="rc-h"><div class="rc-n">2</div><div class="rc-t">Aging & Erosion</div></div><div class="rc-b">
+        <p>Zone: <span class="badge ${zBadge}">${ag.zone}</span></p>
+        <table class="tbl"><thead><tr><th>+Days</th><th>Total</th><th>Floorplan</th><th>Gross (Sticker)</th><th>Realistic</th></tr></thead><tbody>
+        ${ag.erosion_table.map((r,i)=>`<tr><td>${i===0?'<strong>Today</strong>':'+'+r.additional_days}</td><td>${r.total_days}</td><td>${fm(r.floorplan_accrued)}</td><td>${fm(r.gross_at_sticker)}</td><td>${fm(r.realistic_gross_low)} – ${fm(r.realistic_gross_high)}</td></tr>`).join('')}
+        </tbody></table>
+        <div class="co co-r"><h4>Irrationality: Day ${ag.irrationality_threshold.day}</h4><p>~${ag.irrationality_threshold.days_remaining} days remaining before holding becomes irrational.</p></div>
+    </div></div>
+
+    <!-- Pricing -->
+    <div class="rc"><div class="rc-h"><div class="rc-n">3</div><div class="rc-t">Pricing Strategy</div></div><div class="rc-b">
+        <div class="rb">
+            <div class="rb-a">${p.action==='REDUCE'?'↓ REDUCE '+fm(p.change_amount):p.action==='INCREASE'?'↑ INCREASE '+fm(p.change_amount):'● HOLD'}</div>
+            <div class="rb-d">${p.action!=='HOLD'?'New: <strong>'+fm(p.new_list_price)+'</strong>':'Maintain <strong>'+fm(p.current_list_price)+'</strong>'}</div>
+            <div class="rb-s">${p.timing}</div>
+        </div>
+        <p>${p.reasoning}</p>
+        <p>Elasticity: <strong>${p.elasticity}</strong></p>
+        <p>Expected transaction: <strong>${fm(p.expected_transaction_range.low)} – ${fm(p.expected_transaction_range.high)}</strong></p>
+        <p>Expected gross: <strong>${fm(p.expected_gross_range.low)} – ${fm(p.expected_gross_range.high)}</strong></p>
+    </div></div>
+
+    <!-- Exit Path -->
+    <div class="rc"><div class="rc-h"><div class="rc-n">4</div><div class="rc-t">Exit Path</div></div><div class="rc-b">
+        <div class="eg">
+        ${ep.paths.map(pt=>`<div class="ec ${pt.recommended?'rec':''}">
+            ${pt.recommended?'<div class="rl">RECOMMENDED</div>':''}
+            <h4>${pt.path.replace('_',' ')}</h4>
+            <div class="eg-v ${pt.recommended?'grn':''}">${fm(pt.expected_gross_low)}${pt.expected_gross_high!==pt.expected_gross_low?' – '+fm(pt.expected_gross_high):''}</div>
+            <div class="eg-t">${pt.expected_days} | ${pt.probability}</div>
+        </div>`).join('')}
+        </div>
+        <p>${ep.reasoning}</p>
+    </div></div>
+
+    <!-- Actions -->
+    <div class="rc"><div class="rc-h"><div class="rc-n">5</div><div class="rc-t">Action Plan</div></div><div class="rc-b">
+        ${a.action_plan.map(act=>`<div class="ai">
+            <div class="ai-n">${act.priority}</div>
+            <div class="ai-c"><div class="ai-t">${act.timing}</div><h4>${act.title}</h4><p>${act.detail}</p><p style="font-style:italic;margin-top:4px"><strong>Why:</strong> ${act.purpose}</p></div>
+        </div>`).join('')}
+    </div></div>
+
+    <!-- Risk -->
+    <div class="rc"><div class="rc-h"><div class="rc-n">6</div><div class="rc-t">Risk & Confidence</div></div><div class="rc-b">
+        ${rc.risks.map(r=>`<div class="co ${r.severity==='HIGH'?'co-r':r.severity==='MEDIUM'?'co-y':'co-b'}"><h4>${r.factor} <span class="badge ${r.severity==='HIGH'?'b-red':r.severity==='MEDIUM'?'b-ylw':'b-grn'}">${r.severity}</span></h4></div>`).join('')}
+        <p>Confidence: <strong>${rc.confidence.level}</strong> (${rc.confidence.percent}%)</p>
+    </div></div>
+
+    <div class="ts">Generated ${new Date().toLocaleString()} — Vehicle Inventory Intelligence v3.0</div>`;
+
+    rs.innerHTML=html;
+    rs.classList.add('on');
+
+    // Draw chart if curve data exists
+    if(curveData.length>0){
+        setTimeout(()=>drawOddsChart(chartId,curveData),100);
+    }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+    showPane('add');
+    showSubPane('manual');
+});
+</script>
+</body>
+</html>
+  
